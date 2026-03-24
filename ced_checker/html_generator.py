@@ -176,6 +176,12 @@ def generate_html(
     }}
     .location-link:hover {{ text-decoration: underline; }}
 
+    .disclaimer {{
+      background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
+      padding: 12px 16px; margin-bottom: 24px; text-align: center;
+      font-size: 0.9rem; color: #92400e; font-weight: 500;
+    }}
+
     .cards {{ display: flex; flex-direction: column; gap: 12px; }}
     .card {{
       border-radius: 10px; padding: 16px;
@@ -235,6 +241,10 @@ def generate_html(
     <div class="subtitle">Uni Bayreuth &middot; {_esc(mode_label)}</div>
     <div class="date">{weekday}, {date_str}</div>
   </header>
+
+  <div class="disclaimer">
+    Keine &auml;rztliche oder di&auml;tologische Beratung! Bewertungen individuell anpassen!
+  </div>
 
   <div class="summary">
     <h2>Tagesempfehlung</h2>
