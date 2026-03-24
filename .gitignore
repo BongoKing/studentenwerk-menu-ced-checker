@@ -26,5 +26,8 @@ desktop.ini
 report_*.xlsx
 menu_*.xlsx
 
+# Generated HTML output
+public/
+
 # Claude Code
 .claude/

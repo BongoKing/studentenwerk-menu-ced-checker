@@ -1,0 +1,90 @@
+name: Daily CED Mensa-Checker
+
+on:
+  # Täglich um 7:00 Uhr MEZ (= 06:00 UTC im Winter, 05:00 UTC im Sommer)
+  # 05:00 UTC deckt beide Fälle gut ab
+  schedule:
+    - cron: "0 5 * * 1-5"  # Mo-Fr um 05:00 UTC (~07:00 MEZ)
+
+  # Manuell auslösbar über GitHub UI
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Datum (YYYY-MM-DD, leer = heute)"
+        required: false
+        default: ""
+      mode:
+        description: "Krankheitsmodus"
+        required: false
+        default: "crohn"
+        type: choice
+        options:
+          - crohn
+          - colitis
+
+# Berechtigung zum Schreiben auf GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nur ein Deployment gleichzeitig
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests openpyxl colorama
+
+      - name: Determine date
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "target=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+          else
+            echo "target=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine mode
+        id: mode
+        run: |
+          if [ -n "${{ github.event.inputs.mode }}" ]; then
+            echo "target=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+          else
+            echo "target=crohn" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate HTML page
+        run: |
+          python generate_page.py \
+            --date "${{ steps.date.outputs.target }}" \
+            --mode "${{ steps.mode.outputs.target }}" \
+            --output-dir public
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "public"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
