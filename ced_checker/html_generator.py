@@ -1,4 +1,7 @@
-"""Generate a static HTML page with the daily CED meal assessment."""
+"""Generate a static HTML page with the daily CED meal assessment.
+
+Supports both Crohn and Colitis modes in a single page with a toggle switch.
+"""
 
 from datetime import date
 from pathlib import Path
@@ -7,12 +10,12 @@ from ced_checker.models import MealRating
 
 
 GRADE_COLORS = {
-    "A": "#22c55e",  # green
-    "B": "#86efac",  # light green
-    "C": "#eab308",  # yellow
-    "D": "#f97316",  # orange
-    "E": "#ef4444",  # red
-    "F": "#dc2626",  # dark red
+    "A": "#22c55e",
+    "B": "#86efac",
+    "C": "#eab308",
+    "D": "#f97316",
+    "E": "#ef4444",
+    "F": "#dc2626",
 }
 
 GRADE_BG = {
@@ -27,23 +30,23 @@ GRADE_BG = {
 WEEKDAYS_DE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag",
                "Freitag", "Samstag", "Sonntag"]
 
+MODE_LABELS = {
+    "crohn": "Morbus Crohn",
+    "colitis": "Colitis ulcerosa",
+}
 
-def generate_html(
-    target_date: date,
-    mode: str,
-    all_ratings: list[tuple[str, str, list[MealRating]]],
-    output_path: Path,
-) -> Path:
-    """Generate a self-contained HTML page.
 
-    all_ratings: list of (location_label, web_url, [MealRating, ...])
-    """
-    mode_label = "Morbus Crohn" if mode == "crohn" else "Colitis ulcerosa"
-    weekday = WEEKDAYS_DE[target_date.weekday()]
-    date_str = target_date.strftime("%d.%m.%Y")
-    date_iso = target_date.isoformat()
+def _esc(text: str) -> str:
+    """Escape HTML entities."""
+    return (text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;"))
 
-    # Collect best overall picks
+
+def _build_top_picks(all_ratings: list[tuple[str, str, list[MealRating]]]) -> str:
+    """Build HTML for top 3 picks across all locations."""
     combined = []
     for loc_label, _, ratings in all_ratings:
         for r in ratings:
@@ -52,13 +55,34 @@ def generate_html(
     combined.sort(key=lambda x: -x[1].score)
     top3 = combined[:3]
 
-    # Build location sections
-    location_sections = ""
+    if not top3:
+        return '<p class="no-meals">Keine vertr&auml;glichen Gerichte gefunden.</p>'
+
+    html = ""
+    for i, (loc, r) in enumerate(top3, 1):
+        color = GRADE_COLORS.get(r.grade, "#888")
+        html += f'''
+        <div class="top-pick" style="border-left: 4px solid {color};">
+          <span class="top-rank">#{i}</span>
+          <span class="grade" style="background: {color};">{r.grade}</span>
+          <span class="top-score">{r.score:.0f}/10</span>
+          <span class="top-title">{_esc(r.meal.title)}</span>
+          <span class="top-loc">{_esc(loc)} &middot; {r.meal.price:.2f} &euro;</span>
+        </div>'''
+    return html
+
+
+def _build_location_sections(
+    all_ratings: list[tuple[str, str, list[MealRating]]],
+    date_iso: str,
+) -> str:
+    """Build HTML for all location sections with meal cards."""
+    sections = ""
     for loc_label, web_url, ratings in all_ratings:
         display_url = f"{web_url}#/{date_iso}/student"
         cards = ""
         if not ratings:
-            cards = '<p class="no-meals">Keine Gerichte verfügbar.</p>'
+            cards = '<p class="no-meals">Keine Gerichte verf&uuml;gbar.</p>'
         else:
             for rank, r in enumerate(ratings, 1):
                 color = GRADE_COLORS.get(r.grade, "#888")
@@ -67,18 +91,16 @@ def generate_html(
 
                 warnings_html = ""
                 for w in r.warnings:
-                    css_class = "warning-excluded" if w.startswith("AUSGESCHLOSSEN") else "warning"
-                    warnings_html += f'<span class="{css_class}">{_esc(w)}</span>'
+                    css = "warning-excluded" if w.startswith("AUSGESCHLOSSEN") else "warning"
+                    warnings_html += f'<span class="{css}">{_esc(w)}</span>'
 
                 positives_html = ""
                 if r.positives:
-                    pos_str = ", ".join(r.positives)
-                    positives_html = f'<span class="positive">+ {_esc(pos_str)}</span>'
+                    positives_html = f'<span class="positive">+ {_esc(", ".join(r.positives))}</span>'
 
-                tags_html = ""
-                if r.meal.legend_tags:
-                    for tag in r.meal.legend_tags:
-                        tags_html += f'<span class="tag">{_esc(tag)}</span>'
+                tags_html = "".join(
+                    f'<span class="tag">{_esc(tag)}</span>' for tag in r.meal.legend_tags
+                )
 
                 cards += f'''
                 <div class="card" style="border-left: 4px solid {color}; background: {bg};">
@@ -105,28 +127,42 @@ def generate_html(
                   </div>
                 </div>'''
 
-        location_sections += f'''
+        sections += f'''
         <section class="location">
           <h2>{_esc(loc_label)}</h2>
           <a href="{display_url}" target="_blank" class="location-link">{display_url}</a>
           <div class="cards">{cards}</div>
         </section>'''
+    return sections
 
-    # Top picks
-    top_html = ""
-    if top3:
-        for i, (loc, r) in enumerate(top3, 1):
-            color = GRADE_COLORS.get(r.grade, "#888")
-            top_html += f'''
-            <div class="top-pick" style="border-left: 4px solid {color};">
-              <span class="top-rank">#{i}</span>
-              <span class="grade" style="background: {color};">{r.grade}</span>
-              <span class="top-score">{r.score:.0f}/10</span>
-              <span class="top-title">{_esc(r.meal.title)}</span>
-              <span class="top-loc">{_esc(loc)} &middot; {r.meal.price:.2f} &euro;</span>
-            </div>'''
-    else:
-        top_html = '<p class="no-meals">Keine verträglichen Gerichte gefunden.</p>'
+
+def generate_html_dual(
+    target_date: date,
+    ratings_crohn: list[tuple[str, str, list[MealRating]]],
+    ratings_colitis: list[tuple[str, str, list[MealRating]]],
+    output_path: Path,
+    default_mode: str = "crohn",
+) -> Path:
+    """Generate a single HTML page with a toggle between Crohn and Colitis.
+
+    ratings_crohn / ratings_colitis:
+        each is list of (location_label, web_url, [MealRating, ...])
+    """
+    weekday = WEEKDAYS_DE[target_date.weekday()]
+    date_str = target_date.strftime("%d.%m.%Y")
+    date_iso = target_date.isoformat()
+
+    # Build content for both modes
+    crohn_top = _build_top_picks(ratings_crohn)
+    crohn_locations = _build_location_sections(ratings_crohn, date_iso)
+    colitis_top = _build_top_picks(ratings_colitis)
+    colitis_locations = _build_location_sections(ratings_colitis, date_iso)
+
+    # Which mode is initially active?
+    crohn_active = "active" if default_mode == "crohn" else ""
+    colitis_active = "active" if default_mode == "colitis" else ""
+    crohn_display = "block" if default_mode == "crohn" else "none"
+    colitis_display = "block" if default_mode == "colitis" else "none"
 
     html = f'''<!DOCTYPE html>
 <html lang="de">
@@ -141,15 +177,42 @@ def generate_html(
       background: #f8fafc; color: #1e293b; line-height: 1.5;
       max-width: 900px; margin: 0 auto; padding: 16px;
     }}
+
+    /* --- Header --- */
     header {{
       background: linear-gradient(135deg, #1e40af, #3b82f6);
-      color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px;
+      color: white; padding: 24px; border-radius: 12px; margin-bottom: 16px;
       text-align: center;
     }}
     header h1 {{ font-size: 1.5rem; margin-bottom: 4px; }}
     header .subtitle {{ opacity: 0.9; font-size: 0.95rem; }}
     header .date {{ font-size: 1.1rem; font-weight: 600; margin-top: 8px; }}
 
+    /* --- Mode Toggle --- */
+    .mode-toggle {{
+      display: flex; justify-content: center; gap: 0;
+      margin-bottom: 16px; background: #e2e8f0; border-radius: 10px;
+      padding: 4px; max-width: 420px; margin-left: auto; margin-right: auto;
+    }}
+    .mode-btn {{
+      flex: 1; padding: 10px 16px; border: none; background: transparent;
+      font-size: 0.95rem; font-weight: 600; color: #64748b;
+      cursor: pointer; border-radius: 8px; transition: all 0.2s;
+    }}
+    .mode-btn:hover {{ color: #1e293b; }}
+    .mode-btn.active {{
+      background: white; color: #1e40af;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }}
+
+    /* --- Disclaimer --- */
+    .disclaimer {{
+      background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
+      padding: 12px 16px; margin-bottom: 20px; text-align: center;
+      font-size: 0.9rem; color: #92400e; font-weight: 500;
+    }}
+
+    /* --- Summary --- */
     .summary {{
       background: white; border-radius: 12px; padding: 20px;
       margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -165,6 +228,7 @@ def generate_html(
     .top-title {{ font-weight: 600; flex: 1; min-width: 200px; }}
     .top-loc {{ color: #64748b; font-size: 0.85rem; }}
 
+    /* --- Location sections --- */
     .location {{ margin-bottom: 28px; }}
     .location h2 {{
       font-size: 1.2rem; color: #1e40af; margin-bottom: 4px;
@@ -176,12 +240,7 @@ def generate_html(
     }}
     .location-link:hover {{ text-decoration: underline; }}
 
-    .disclaimer {{
-      background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
-      padding: 12px 16px; margin-bottom: 24px; text-align: center;
-      font-size: 0.9rem; color: #92400e; font-weight: 500;
-    }}
-
+    /* --- Cards --- */
     .cards {{ display: flex; flex-direction: column; gap: 12px; }}
     .card {{
       border-radius: 10px; padding: 16px;
@@ -209,22 +268,23 @@ def generate_html(
       border-radius: 4px; font-size: 0.75rem;
     }}
     .feedback {{ display: flex; flex-direction: column; gap: 4px; }}
-    .positive {{
-      color: #16a34a; font-size: 0.85rem; font-weight: 500;
-    }}
-    .warning {{
-      color: #d97706; font-size: 0.82rem; display: block;
-    }}
+    .positive {{ color: #16a34a; font-size: 0.85rem; font-weight: 500; }}
+    .warning {{ color: #d97706; font-size: 0.82rem; display: block; }}
     .warning-excluded {{
       color: #dc2626; font-weight: 600; font-size: 0.82rem; display: block;
     }}
     .no-meals {{ color: #94a3b8; font-style: italic; padding: 12px 0; }}
 
+    /* --- Footer --- */
     footer {{
       text-align: center; color: #94a3b8; font-size: 0.8rem;
       padding: 20px 0; border-top: 1px solid #e2e8f0; margin-top: 20px;
     }}
     footer a {{ color: #3b82f6; text-decoration: none; }}
+
+    /* --- Mode content visibility --- */
+    .mode-content {{ display: none; }}
+    .mode-content.visible {{ display: block; }}
 
     @media (max-width: 600px) {{
       body {{ padding: 8px; }}
@@ -232,32 +292,79 @@ def generate_html(
       .card {{ padding: 12px; }}
       .meta {{ gap: 8px; }}
       .top-pick {{ flex-direction: column; align-items: flex-start; gap: 4px; }}
+      .mode-btn {{ padding: 8px 10px; font-size: 0.85rem; }}
     }}
   </style>
 </head>
 <body>
   <header>
     <h1>CED Mensa-Checker</h1>
-    <div class="subtitle">Uni Bayreuth &middot; {_esc(mode_label)}</div>
+    <div class="subtitle">Uni Bayreuth</div>
     <div class="date">{weekday}, {date_str}</div>
   </header>
+
+  <div class="mode-toggle">
+    <button class="mode-btn {crohn_active}" data-mode="crohn"
+            onclick="switchMode('crohn')">Morbus Crohn</button>
+    <button class="mode-btn {colitis_active}" data-mode="colitis"
+            onclick="switchMode('colitis')">Colitis ulcerosa</button>
+  </div>
 
   <div class="disclaimer">
     Keine &auml;rztliche oder di&auml;tologische Beratung! Bewertungen individuell anpassen!
   </div>
 
-  <div class="summary">
-    <h2>Tagesempfehlung</h2>
-    {top_html}
+  <!-- Crohn content -->
+  <div id="content-crohn" class="mode-content" style="display: {crohn_display};">
+    <div class="summary">
+      <h2>Tagesempfehlung &mdash; Morbus Crohn</h2>
+      {crohn_top}
+    </div>
+    {crohn_locations}
   </div>
 
-  {location_sections}
+  <!-- Colitis content -->
+  <div id="content-colitis" class="mode-content" style="display: {colitis_display};">
+    <div class="summary">
+      <h2>Tagesempfehlung &mdash; Colitis ulcerosa</h2>
+      {colitis_top}
+    </div>
+    {colitis_locations}
+  </div>
 
   <footer>
     CED Mensa-Checker &middot;
     Datenquelle: <a href="https://sls.swo.bayern">Studierendenwerk Oberfranken</a><br>
-    Keine ärztliche Beratung. Bewertungen individuell anpassen.
+    Keine &auml;rztliche oder di&auml;tologische Beratung. Bewertungen individuell anpassen.
   </footer>
+
+  <script>
+    function switchMode(mode) {{
+      // Toggle content visibility
+      document.getElementById('content-crohn').style.display =
+        mode === 'crohn' ? 'block' : 'none';
+      document.getElementById('content-colitis').style.display =
+        mode === 'colitis' ? 'block' : 'none';
+
+      // Toggle button active state
+      document.querySelectorAll('.mode-btn').forEach(btn => {{
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      }});
+
+      // Remember choice
+      try {{ localStorage.setItem('ced-mode', mode); }} catch(e) {{}}
+    }}
+
+    // Restore last choice on load
+    (function() {{
+      try {{
+        const saved = localStorage.getItem('ced-mode');
+        if (saved && (saved === 'crohn' || saved === 'colitis')) {{
+          switchMode(saved);
+        }}
+      }} catch(e) {{}}
+    }})();
+  </script>
 </body>
 </html>'''
 
@@ -266,10 +373,16 @@ def generate_html(
     return output_path
 
 
-def _esc(text: str) -> str:
-    """Escape HTML entities."""
-    return (text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;"))
+# Keep legacy single-mode function for backward compatibility
+def generate_html(
+    target_date: date,
+    mode: str,
+    all_ratings: list[tuple[str, str, list[MealRating]]],
+    output_path: Path,
+) -> Path:
+    """Generate a single-mode HTML page (legacy, wraps generate_html_dual)."""
+    empty = [(label, url, []) for label, url, _ in all_ratings]
+    if mode == "crohn":
+        return generate_html_dual(target_date, all_ratings, empty, output_path, "crohn")
+    else:
+        return generate_html_dual(target_date, empty, all_ratings, output_path, "colitis")

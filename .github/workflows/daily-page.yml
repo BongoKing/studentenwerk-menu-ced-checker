@@ -2,7 +2,6 @@ name: Daily CED Mensa-Checker
 
 on:
   # Täglich um 7:00 Uhr MEZ (= 06:00 UTC im Winter, 05:00 UTC im Sommer)
-  # 05:00 UTC deckt beide Fälle gut ab
   schedule:
     - cron: "0 5 * * 1-5"  # Mo-Fr um 05:00 UTC (~07:00 MEZ)
 
@@ -13,14 +12,6 @@ on:
         description: "Datum (YYYY-MM-DD, leer = heute)"
         required: false
         default: ""
-      mode:
-        description: "Krankheitsmodus"
-        required: false
-        default: "crohn"
-        type: choice
-        options:
-          - crohn
-          - colitis
 
 # Berechtigung zum Schreiben auf GitHub Pages
 permissions:
@@ -58,23 +49,13 @@ jobs:
           if [ -n "${{ github.event.inputs.date }}" ]; then
             echo "target=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
           else
-            echo "target=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+            echo "target=$(TZ='Europe/Berlin' date +%Y-%m-%d)" >> $GITHUB_OUTPUT
           fi
 
-      - name: Determine mode
-        id: mode
-        run: |
-          if [ -n "${{ github.event.inputs.mode }}" ]; then
-            echo "target=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
-          else
-            echo "target=crohn" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate HTML page
+      - name: Generate HTML page (both modes)
         run: |
           python generate_page.py \
             --date "${{ steps.date.outputs.target }}" \
-            --mode "${{ steps.mode.outputs.target }}" \
             --output-dir public
 
       - name: Setup Pages
