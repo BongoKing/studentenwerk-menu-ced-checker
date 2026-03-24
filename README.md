@@ -6,23 +6,23 @@ Das Tool ruft täglich die Speisepläne der Uni Bayreuth ab (Hauptmensa, Frischr
 
 ## Features
 
-- **Zwei Krankheitsmodi:** Unterscheidung zwischen Morbus Crohn und Colitis ulcerosa
-- **Automatische Bewertung:** Jedes Gericht erhält eine Note (A–F) basierend auf Allergenen, Zusatzstoffen und erkannten Zutaten
-- **Anpassbare Konfiguration:** Zwei Excel-Dateien steuern die Bewertung — individuell editierbar (z.B. persönliche Unverträglichkeiten ergänzen)
-- **Farbige Konsolenausgabe:** Rangliste mit Warnungen (rot) und empfohlenen Aspekten (grün)
-- **Zeitraum-Reports:** Auswertung über mehrere Tage/Wochen als xlsx mit Detailübersicht, Tagesübersicht und Statistik
-- **Flexibel erweiterbar:** Mensen, URLs und Kategorien über `settings.json` anpassbar
+* **Zwei Krankheitsmodi:** Unterscheidung zwischen Morbus Crohn und Colitis ulcerosa
+* **Automatische Bewertung:** Jedes Gericht erhält eine Note (A–F) basierend auf Allergenen, Zusatzstoffen und erkannten Zutaten
+* **Anpassbare Konfiguration:** Zwei Excel-Dateien steuern die Bewertung — individuell editierbar (z.B. persönliche Unverträglichkeiten ergänzen)
+* **Farbige Konsolenausgabe:** Rangliste mit Warnungen (rot) und empfohlenen Aspekten (grün)
+* **Zeitraum-Reports:** Auswertung über mehrere Tage/Wochen als xlsx mit Detailübersicht, Tagesübersicht und Statistik
+* **Flexibel erweiterbar:** Mensen, URLs und Kategorien über `settings.json` anpassbar
 
 ## Notensystem
 
-| Note | Score | Bedeutung |
-|------|-------|-----------|
-| **A** | 9–10 | Sehr gut verträglich |
-| **B** | 7–8 | Gut verträglich |
-| **C** | 5–6 | Bedingt verträglich |
-| **D** | 3–4 | Schlecht verträglich |
-| **E** | 1–2 | Sehr schlecht verträglich |
-| **F** | 0 | Ausgeschlossen |
+|Note|Score|Bedeutung|
+|-|-|-|
+|**A**|9–10|Sehr gut verträglich|
+|**B**|7–8|Gut verträglich|
+|**C**|5–6|Bedingt verträglich|
+|**D**|3–4|Schlecht verträglich|
+|**E**|1–2|Sehr schlecht verträglich|
+|**F**|0|Ausgeschlossen|
 
 ## Installation
 
@@ -34,7 +34,7 @@ cd studentenwerk-menu-ced-checker
 # Virtuelle Umgebung erstellen und aktivieren
 python -m venv .venv
 # Windows:
-.venv\Scripts\activate
+.venv\\\\Scripts\\\\activate
 # Linux/macOS:
 source .venv/bin/activate
 
@@ -74,13 +74,14 @@ python main.py --from 2026-03-23 --to 2026-03-27
 python main.py --from 2026-03-01 --to 2026-03-31 -m colitis
 
 # Eigener Dateiname
-python main.py --from 2026-03-23 --to 2026-03-25 -o mein_report.xlsx
+python main.py --from 2026-03-23 --to 2026-03-25 -o mein\\\_report.xlsx
 ```
 
 Der Report enthält drei Blätter:
-- **Detailübersicht** — Jedes Gericht pro Tag/Mensa mit Note, Score, Preis, Nährwerten, Tags, Positiva und Warnungen
-- **Tagesübersicht** — Bestes Gericht pro Tag, Anzahl verträgliche/ausgeschlossene Gerichte
-- **Statistik** — Notenverteilung, häufigste Warnungen, Top-10-Gerichte, Statistik pro Mensa
+
+* **Detailübersicht** — Jedes Gericht pro Tag/Mensa mit Note, Score, Preis, Nährwerten, Tags, Positiva und Warnungen
+* **Tagesübersicht** — Bestes Gericht pro Tag, Anzahl verträgliche/ausgeschlossene Gerichte
+* **Statistik** — Notenverteilung, häufigste Warnungen, Top-10-Gerichte, Statistik pro Mensa
 
 ## Konfiguration
 
@@ -90,29 +91,29 @@ Basis-URLs, Mensen und Standard-Krankheitsmodus:
 
 ```json
 {
-  "base_url": "https://sls.swo.bayern",
-  "api_path": "/api/meals",
-  "locations": [
-    {"name": "hauptmensa-bayreuth", "label": "Hauptmensa", "categories": ["main"], "web_url": "https://sls.swo.bayern/hauptmensa-bayreuth"},
-    {"name": "frischraum-bayreuth", "label": "Frischraum", "categories": ["main"], "web_url": "https://sls.swo.bayern/frischraum-bayreuth"},
-    {"name": "salatbar-bayreuth", "label": "Salatbar", "categories": ["salad"], "web_url": "https://sls.swo.bayern/salatbar-bayreuth"}
+  "base\\\_url": "https://sls.swo.bayern",
+  "api\\\_path": "/api/meals",
+  "locations": \\\[
+    {"name": "hauptmensa-bayreuth", "label": "Hauptmensa", "categories": \\\["main"], "web\\\_url": "https://sls.swo.bayern/hauptmensa-bayreuth"},
+    {"name": "frischraum-bayreuth", "label": "Frischraum", "categories": \\\["main"], "web\\\_url": "https://sls.swo.bayern/frischraum-bayreuth"},
+    {"name": "salatbar-bayreuth", "label": "Salatbar", "categories": \\\["salad"], "web\\\_url": "https://sls.swo.bayern/salatbar-bayreuth"}
   ],
-  "disease_mode": "crohn"
+  "disease\\\_mode": "crohn"
 }
 ```
 
 Weitere Mensen oder Standorte können hier ergänzt werden.
 
-### `config/allergene_zusatzstoffe.xlsx`
+### `config/allergene\\\_zusatzstoffe.xlsx`
 
 Bewertung aller Allergene und Zusatzstoffe (basierend auf der offiziellen Allergeneliste des Studierendenwerks):
 
-| Code | Beschreibung | Bewertung_Crohn | Bewertung_Colitis |
-|------|-------------|-----------------|-------------------|
-| 1 | mit Farbstoff | vermeiden | vermeiden |
-| a1 | Weizengluten | vermeiden | akzeptabel |
-| g | Milch und Erzeugnisse | vermeiden | akzeptabel |
-| ... | ... | ... | ... |
+|Code|Beschreibung|Bewertung\_Crohn|Bewertung\_Colitis|
+|-|-|-|-|
+|1|mit Farbstoff|vermeiden|vermeiden|
+|a1|Weizengluten|vermeiden|akzeptabel|
+|g|Milch und Erzeugnisse|vermeiden|akzeptabel|
+|...|...|...|...|
 
 Mögliche Werte: `ausgeschlossen`, `vermeiden`, `akzeptabel`
 
@@ -120,13 +121,13 @@ Mögliche Werte: `ausgeschlossen`, `vermeiden`, `akzeptabel`
 
 Bewertung von Nahrungsmitteln und Legende-Tags (Schwein, Vegan, etc.) sowie individuelle Zutaten:
 
-| Nahrungsmittel | Bewertung_Crohn | Bewertung_Colitis |
-|---------------|-----------------|-------------------|
-| Schwein | vermeiden | vermeiden |
-| Geflügel | empfohlen | empfohlen |
-| Chili | ausgeschlossen | ausgeschlossen |
-| Kartoffel | empfohlen | empfohlen |
-| ... | ... | ... |
+|Nahrungsmittel|Bewertung\_Crohn|Bewertung\_Colitis|
+|-|-|-|
+|Schwein|vermeiden|vermeiden|
+|Geflügel|empfohlen|empfohlen|
+|Chili|ausgeschlossen|ausgeschlossen|
+|Kartoffel|empfohlen|empfohlen|
+|...|...|...|
 
 Mögliche Werte: `ausgeschlossen`, `vermeiden`, `akzeptabel`, `empfohlen`
 
@@ -135,13 +136,15 @@ Eigene Einträge (z.B. `Gurke`, `Tomate`, `Curry`) können jederzeit ergänzt we
 ## Bewertungsalgorithmus
 
 1. Jedes Gericht startet mit **Score 10**
-2. **Allergen-Codes** des Gerichts werden gegen `allergene_zusatzstoffe.xlsx` geprüft:
-   - `ausgeschlossen` → Score 0, Gericht markiert
-   - `vermeiden` → Score −2, Warnung
+2. **Allergen-Codes** des Gerichts werden gegen `allergene\\\_zusatzstoffe.xlsx` geprüft:
+
+   * `ausgeschlossen` → Score 0, Gericht markiert
+   * `vermeiden` → Score −2, Warnung
 3. **Legende-Tags** (Schwein, Vegan, Geflügel, etc.) und **Schlüsselwörter im Titel** werden gegen `nahrungsmittel.xlsx` geprüft:
-   - `ausgeschlossen` → Score 0
-   - `vermeiden` → Score −2
-   - `empfohlen` → Score +1
+
+   * `ausgeschlossen` → Score 0
+   * `vermeiden` → Score −2
+   * `empfohlen` → Score +1
 4. Score wird auf 0–10 begrenzt und in Note A–F umgewandelt
 
 ## Projektstruktur
@@ -149,17 +152,17 @@ Eigene Einträge (z.B. `Gurke`, `Tomate`, `Curry`) können jederzeit ergänzt we
 ```
 studentenwerk-menu-ced-checker/
 ├── main.py                        # CLI-Einstiegspunkt
-├── ced_checker/
-│   ├── __init__.py
+├── ced\\\_checker/
+│   ├── \\\_\\\_init\\\_\\\_.py
 │   ├── api.py                     # API-Abruf (Studierendenwerk)
 │   ├── models.py                  # Datenklassen (Meal, MealRating)
-│   ├── config_loader.py           # xlsx/JSON-Konfiguration laden
+│   ├── config\\\_loader.py           # xlsx/JSON-Konfiguration laden
 │   ├── analyzer.py                # CED-Verträglichkeitsanalyse
 │   ├── output.py                  # Farbige Konsolenausgabe
 │   └── report.py                  # xlsx-Zeitraum-Reports
 ├── config/
 │   ├── settings.json              # URLs, Mensen, Modus
-│   ├── allergene_zusatzstoffe.xlsx # Allergen-Bewertungen
+│   ├── allergene\\\_zusatzstoffe.xlsx # Allergen-Bewertungen
 │   └── nahrungsmittel.xlsx        # Nahrungsmittel-Bewertungen
 └── pyproject.toml
 ```
@@ -175,3 +178,4 @@ Dieses Tool ersetzt keine ärztliche Beratung. Die voreingestellten Bewertungen 
 ## Lizenz
 
 Dieses Projekt steht unter der [MIT-Lizenz](LICENSE).
+
