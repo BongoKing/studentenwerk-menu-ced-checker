@@ -34,7 +34,7 @@ cd studentenwerk-menu-ced-checker
 # Virtuelle Umgebung erstellen und aktivieren
 python -m venv .venv
 # Windows:
-.venv\\\\Scripts\\\\activate
+.venv\\\\\\\\Scripts\\\\\\\\activate
 # Linux/macOS:
 source .venv/bin/activate
 
@@ -74,7 +74,7 @@ python main.py --from 2026-03-23 --to 2026-03-27
 python main.py --from 2026-03-01 --to 2026-03-31 -m colitis
 
 # Eigener Dateiname
-python main.py --from 2026-03-23 --to 2026-03-25 -o mein\\\_report.xlsx
+python main.py --from 2026-03-23 --to 2026-03-25 -o mein\\\\\\\_report.xlsx
 ```
 
 Der Report enthält drei Blätter:
@@ -91,20 +91,20 @@ Basis-URLs, Mensen und Standard-Krankheitsmodus:
 
 ```json
 {
-  "base\\\_url": "https://sls.swo.bayern",
-  "api\\\_path": "/api/meals",
-  "locations": \\\[
-    {"name": "hauptmensa-bayreuth", "label": "Hauptmensa", "categories": \\\["main"], "web\\\_url": "https://sls.swo.bayern/hauptmensa-bayreuth"},
-    {"name": "frischraum-bayreuth", "label": "Frischraum", "categories": \\\["main"], "web\\\_url": "https://sls.swo.bayern/frischraum-bayreuth"},
-    {"name": "salatbar-bayreuth", "label": "Salatbar", "categories": \\\["salad"], "web\\\_url": "https://sls.swo.bayern/salatbar-bayreuth"}
+  "base\\\\\\\_url": "https://sls.swo.bayern",
+  "api\\\\\\\_path": "/api/meals",
+  "locations": \\\\\\\[
+    {"name": "hauptmensa-bayreuth", "label": "Hauptmensa", "categories": \\\\\\\["main"], "web\\\\\\\_url": "https://sls.swo.bayern/hauptmensa-bayreuth"},
+    {"name": "frischraum-bayreuth", "label": "Frischraum", "categories": \\\\\\\["main"], "web\\\\\\\_url": "https://sls.swo.bayern/frischraum-bayreuth"},
+    {"name": "salatbar-bayreuth", "label": "Salatbar", "categories": \\\\\\\["salad"], "web\\\\\\\_url": "https://sls.swo.bayern/salatbar-bayreuth"}
   ],
-  "disease\\\_mode": "crohn"
+  "disease\\\\\\\_mode": "crohn"
 }
 ```
 
 Weitere Mensen oder Standorte können hier ergänzt werden.
 
-### `config/allergene\\\_zusatzstoffe.xlsx`
+### `config/allergene\\\\\\\_zusatzstoffe.xlsx`
 
 Bewertung aller Allergene und Zusatzstoffe (basierend auf der offiziellen Allergeneliste des Studierendenwerks):
 
@@ -136,7 +136,7 @@ Eigene Einträge (z.B. `Gurke`, `Tomate`, `Curry`) können jederzeit ergänzt we
 ## Bewertungsalgorithmus
 
 1. Jedes Gericht startet mit **Score 10**
-2. **Allergen-Codes** des Gerichts werden gegen `allergene\\\_zusatzstoffe.xlsx` geprüft:
+2. **Allergen-Codes** des Gerichts werden gegen `allergene\\\\\\\_zusatzstoffe.xlsx` geprüft:
 
    * `ausgeschlossen` → Score 0, Gericht markiert
    * `vermeiden` → Score −2, Warnung
@@ -152,17 +152,17 @@ Eigene Einträge (z.B. `Gurke`, `Tomate`, `Curry`) können jederzeit ergänzt we
 ```
 studentenwerk-menu-ced-checker/
 ├── main.py                        # CLI-Einstiegspunkt
-├── ced\\\_checker/
-│   ├── \\\_\\\_init\\\_\\\_.py
+├── ced\\\\\\\_checker/
+│   ├── \\\\\\\_\\\\\\\_init\\\\\\\_\\\\\\\_.py
 │   ├── api.py                     # API-Abruf (Studierendenwerk)
 │   ├── models.py                  # Datenklassen (Meal, MealRating)
-│   ├── config\\\_loader.py           # xlsx/JSON-Konfiguration laden
+│   ├── config\\\\\\\_loader.py           # xlsx/JSON-Konfiguration laden
 │   ├── analyzer.py                # CED-Verträglichkeitsanalyse
 │   ├── output.py                  # Farbige Konsolenausgabe
 │   └── report.py                  # xlsx-Zeitraum-Reports
 ├── config/
 │   ├── settings.json              # URLs, Mensen, Modus
-│   ├── allergene\\\_zusatzstoffe.xlsx # Allergen-Bewertungen
+│   ├── allergene\\\\\\\_zusatzstoffe.xlsx # Allergen-Bewertungen
 │   └── nahrungsmittel.xlsx        # Nahrungsmittel-Bewertungen
 └── pyproject.toml
 ```
@@ -174,6 +174,7 @@ Die Speisepläne werden über die interne API des [Studierendenwerks Oberfranken
 ## Hinweis
 
 Dieses Tool ersetzt keine ärztliche Beratung. Die voreingestellten Bewertungen basieren auf allgemeinen Ernährungsempfehlungen bei CED und sollten individuell angepasst werden. Jeder Krankheitsverlauf ist unterschiedlich.
+Dieses Tool wurde unter Verwendung von Claude Opus 4.6 erstellt.
 
 ## Lizenz
 
