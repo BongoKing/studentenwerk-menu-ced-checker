@@ -1,0 +1,13 @@
+[project]
+name = "studentenwerk-menu-ced-checker"
+version = "0.1.0"
+description = "CED-Verträglichkeitsprüfung für den Speiseplan der Uni Bayreuth"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.31",
+    "openpyxl>=3.1",
+    "colorama>=0.4",
+]
+
+[project.scripts]
+ced-checker = "main:main"

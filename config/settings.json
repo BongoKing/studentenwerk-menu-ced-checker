@@ -1,0 +1,25 @@
+{
+  "base_url": "https://sls.swo.bayern",
+  "api_path": "/api/meals",
+  "locations": [
+    {
+      "name": "hauptmensa-bayreuth",
+      "label": "Hauptmensa",
+      "categories": ["main"],
+      "web_url": "https://sls.swo.bayern/hauptmensa-bayreuth"
+    },
+    {
+      "name": "frischraum-bayreuth",
+      "label": "Frischraum",
+      "categories": ["main"],
+      "web_url": "https://sls.swo.bayern/frischraum-bayreuth"
+    },
+    {
+      "name": "salatbar-bayreuth",
+      "label": "Salatbar",
+      "categories": ["salad"],
+      "web_url": "https://sls.swo.bayern/salatbar-bayreuth"
+    }
+  ],
+  "disease_mode": "crohn"
+}
