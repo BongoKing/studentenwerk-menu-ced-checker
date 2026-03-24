@@ -1,18 +1,23 @@
 """Generate a static HTML page for GitHub Pages deployment.
 
-Builds both Crohn and Colitis assessments into a single page with toggle.
+Embeds raw meal data and both config files as JSON. The page uses
+client-side JavaScript for analysis, rendering, and user customization.
 
 Usage:
     python generate_page.py [--date YYYY-MM-DD] [--output-dir public]
 """
 
 import argparse
+import json
 from datetime import date
 from pathlib import Path
 
 from ced_checker.api import fetch_meals
-from ced_checker.config_loader import load_settings, load_allergen_config, load_food_config
-from ced_checker.analyzer import analyze_and_rank
+from ced_checker.config_loader import (
+    load_settings,
+    load_allergen_config_both,
+    load_food_config_both,
+)
 from ced_checker.html_generator import generate_html_dual
 
 
@@ -31,39 +36,37 @@ def main():
     base_url = settings["base_url"]
     api_path = settings["api_path"]
 
-    # Load configs for BOTH modes
-    allergen_crohn = load_allergen_config(config_dir / "allergene_zusatzstoffe.xlsx", "crohn")
-    food_crohn = load_food_config(config_dir / "nahrungsmittel.xlsx", "crohn")
-    allergen_colitis = load_allergen_config(config_dir / "allergene_zusatzstoffe.xlsx", "colitis")
-    food_colitis = load_food_config(config_dir / "nahrungsmittel.xlsx", "colitis")
+    # Load configs with both modes combined
+    allergen_defaults = load_allergen_config_both(config_dir / "allergene_zusatzstoffe.xlsx")
+    food_defaults = load_food_config_both(config_dir / "nahrungsmittel.xlsx")
 
-    # Fetch meals once, analyze for both modes
-    ratings_crohn = []
-    ratings_colitis = []
+    print(f"  Configs: {len(allergen_defaults)} Allergene, {len(food_defaults)} Nahrungsmittel")
 
+    # Fetch meals once, serialize to JSON-friendly dicts
+    meals_data = []
     for loc in locations:
         meals = fetch_meals(base_url, api_path, loc["name"], args.date, loc["categories"])
         print(f"  {loc['label']}: {len(meals)} Gerichte geladen")
-
-        r_crohn = analyze_and_rank(meals, allergen_crohn, food_crohn) if meals else []
-        r_colitis = analyze_and_rank(meals, allergen_colitis, food_colitis) if meals else []
-
-        ratings_crohn.append((loc["label"], loc["web_url"], r_crohn))
-        ratings_colitis.append((loc["label"], loc["web_url"], r_colitis))
+        meals_data.append({
+            "label": loc["label"],
+            "web_url": loc["web_url"],
+            "meals": [m.to_dict() for m in meals],
+        })
 
     output_dir = Path(args.output_dir)
     output_path = output_dir / "index.html"
 
     generate_html_dual(
         target_date=target_date,
-        ratings_crohn=ratings_crohn,
-        ratings_colitis=ratings_colitis,
-        output_path=output_path,
+        meals_json=json.dumps(meals_data, ensure_ascii=False),
+        allergens_json=json.dumps(allergen_defaults, ensure_ascii=False),
+        foods_json=json.dumps(food_defaults, ensure_ascii=False),
         default_mode=default_mode,
+        output_path=output_path,
     )
 
     print(f"\n  HTML generiert: {output_path.resolve()}")
-    print(f"  Beide Modi (Crohn + Colitis) enthalten, umschaltbar per Toggle.")
+    print(f"  Beide Modi + Einstellungs-Panel enthalten.")
 
 
 if __name__ == "__main__":

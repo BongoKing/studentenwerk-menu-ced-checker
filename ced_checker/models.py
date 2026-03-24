@@ -77,6 +77,20 @@ class Meal:
             kraeuterkueche=is_kraeuterkueche,
         )
 
+    def to_dict(self) -> dict:
+        """Serialize to JSON-compatible dict for embedding in HTML."""
+        return {
+            "title": self.title,
+            "allergen_codes": self.allergen_codes,
+            "legend_tags": self.legend_tags,
+            "price": self.price,
+            "calories": self.calories,
+            "fat": self.fat,
+            "fiber": self.fiber,
+            "protein": self.protein,
+            "salt": self.salt,
+        }
+
 
 @dataclass
 class MealRating:
